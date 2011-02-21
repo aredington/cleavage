@@ -2,8 +2,9 @@
   (:use [penumbra opengl]
 	[clojure.java.io])
   (:require [penumbra.app :as app]
-	    [clojure.string :as str])
-  (:import (org.eclipse.jgit.lib Repository RepositoryBuilder)
+	    [clojure.string :as str]
+	    [clojure.contrib.strint :as strint])
+  (:import (org.eclipse.jgit.lib Repository RepositoryBuilder Constants)
 	   (org.eclipse.jgit.revwalk RevCommit RevWalk)
 	   (org.eclipse.jgit.treewalk.filter PathFilter TreeFilter AndTreeFilter)))
 
@@ -23,7 +24,7 @@
   [file]
   (str/replace (.getPath file) *git-victimdir* ""))
 
-(defn resolve-revision
+(defn repository-resolve
   [revision]
   (.resolve (repository) revision))
 
@@ -31,7 +32,7 @@
   "a count of all the commits touching a specific file"
   [file revsision]
   (let [rw (RevWalk. (repository))]
-    (.markStart rw (.parseCommit rw (resolve-revision revsision)))
+    (.markStart rw (.parseCommit rw (repository-resolve revsision)))
     (.setTreeFilter rw (AndTreeFilter/create (PathFilter/create (relative-path file)) TreeFilter/ANY_DIFF))
     (count (seq rw))))
 
@@ -44,21 +45,33 @@
    (file-seq (victimdir))))
 
 (defn cyclomatches
-  [string]
-  (count (re-seq #"for|if|while|case|catch|&&|\\\|\\\||\\\?" string)))
+  [contents]
+  (count (re-seq #"for|if|while|case|catch|&&|\\\|\\\||\\\?" contents)))
 
 (defn cyclomatic-complexity
   "returns the cyclomatic complexity for one file"
-  [file]
-  (cyclomatches (slurp file)))
+  [contents]
+  (cyclomatches contents))
 
 (defn complexity
   "returns a numeric complexity score for some file"
+  [contents]
+  (cyclomatic-complexity contents))
+
+(defn revision-contents
   [file revision]
-  (cyclomatic-complexity file))
+  (let [resolve-query (strint/<< "~{revision}:~(relative-path file)")
+	versioned-object-id (repository-resolve resolve-query)]
+    (if (nil? versioned-object-id)
+      ""
+      (slurp (.. (repository) (open versioned-object-id) openStream)))))
+
+(defn scatter-point
+  [file revision]
+  (vector (relative-path file) (complexity (revision-contents file revision)) (commit-count file revision)))
 
 (defn scatter-plot
   [revision]
-  (map #(vector (.getName %1) (complexity %1 revision) (commit-count %1 revision)) (victim-files)))
+  (map #(scatter-point %1 revision) (victim-files)))
 
 
