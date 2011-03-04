@@ -1,6 +1,7 @@
 (ns cleavage.core
   (:require [cleavage.repository :as repo]
-	    [cleavage.code-analysis :as code]))
+	    [cleavage.code-analysis :as code]
+	    [cleavage.glviewer :as glviewer]))
 
 (defrecord ScatterPoint [^String filename ^int complexity ^int commits])
 
@@ -20,3 +21,6 @@
 (defn history
   [dir]
   (map #(scatter-plot dir %) (repo/revisions dir)))
+
+(defn cleavage [dir]
+  (glviewer/start (take 15 (history dir))))

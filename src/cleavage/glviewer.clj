@@ -7,8 +7,8 @@
 ;; -----------------------------------------------------------------------------
 ;; Vars
 
-(def app-width 640)
-(def app-height 480)
+(def app-width 800)
+(def app-height 600)
 
 (def cos-quarter-pi (Math/cos (/ Math/PI 4)))
 
@@ -19,24 +19,31 @@
 (def oct [[0.0 1.0 0.0]
 	  [cos-quarter-pi cos-quarter-pi 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [cos-quarter-pi cos-quarter-pi 0.0]
 	  [1.0 0.0 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [1.0 0.0 0.0]
 	  [cos-quarter-pi (- cos-quarter-pi) 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [cos-quarter-pi (- cos-quarter-pi) 0.0]
 	  [0.0 -1.0 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [0.0 -1.0 0.0]
 	  [(- cos-quarter-pi) (- cos-quarter-pi) 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [(- cos-quarter-pi) (- cos-quarter-pi) 0.0]
 	  [-1.0 0.0 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [-1.0 0.0 0.0]
 	  [(- cos-quarter-pi) cos-quarter-pi 0.0]
 	  [0.0 0.0 0.0]
+	  
 	  [(- cos-quarter-pi) cos-quarter-pi 0.0]
 	  [0.0 1.0 0.0]
 	  [0.0 0.0 0.0]])
@@ -93,10 +100,10 @@
    (draw-triangles (dorun (map #(apply vertex %) oct)))))
 
 (defn display [[delta time] state]
-  (translate 0.0 0.0 -10.0)
+  (translate -4.0 -4.0 -20.0)
   (rotate (:xrot state) 1.0 0.0 0.0)
   (rotate (:yrot state) 0.0 0.0 1.0)
-  (doseq [point (map #(list (nth % 1) (nth % 2) 0) fake/test-plot)]
+  (doseq [point (:points state)]
     (apply draw-octagon point))
   (app/repaint!))
 
@@ -108,5 +115,15 @@
               :display display
               :init init})
 
-(defn start []
-  (app/start options {}))
+(defn point-set [scatter-point-set height]
+  (map #(vector (:complexity %) (:commits %) height) scatter-point-set))
+
+(defn glpoints [revision]
+  (let [scatter-point-set (map #(:points %) revision)]
+    (map #(point-set %1 %2) scatter-point-set (map #(/ % 10.0) (range)))))
+
+(defn glmassage [history]
+  (reduce concat (glpoints (reverse history))))
+
+(defn start [history]
+  (app/start options {:points (glmassage history)}))
