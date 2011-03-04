@@ -41,11 +41,19 @@ complexity vs. # of commits for each file. It creates layered scatter plots (put
 each point) based on this information. It does not provide any means of identifying what file is 
 represented by each of these stacks of points.
 
+You can hit the arrow keys to rotate the view of the scatter plot around to get different perspectives.
+
+Right now the camera doesn't translate around, so you're stuck basically rotating the plot you're looking
+at around.
+
 ## Why doesn't it do X?
 
 Because I've spent three days playing with it by myself. If you'd like to contribute, please fork it, 
 make your changes in a topic branch, and then make a pull request. Tests are nice, but I've been slacking
 on adding them so far, so you can too.
+
+More importantly, I wanted to get something, even if only barely functional, out there quickly. Later improvements
+can come with more time and more eyes.
 
 ## I want to know which file is going out of control!
 
