@@ -1,26 +1,32 @@
 (ns cleavage.core
   (:require [cleavage.repository :as repo]
 	    [cleavage.code-analysis :as code]
-	    [cleavage.glviewer :as glviewer]))
+	    [cleavage.glviewer :as glviewer]
+	    [cleavage.git-repository :as git]))
 
-(defrecord ScatterPoint [^String filename ^int complexity ^int commits])
+(defrecord FileHistory [^String filename points])
 
-(defrecord ScatterPlot [^String revision points])
+;; (defn scatter-point
+;;   [repository file revision]
+;;   (ScatterPoint. (repo/relative-path repository file)
+;; 		 (code/complexity (repo/revision-contents repository file revision))
+;; 		 (repo/commit-count repository file revision)))
 
-(defn scatter-point
-  [dir file revision]
-  (ScatterPoint. (repo/relative-path dir file)
-		 (code/complexity (repo/revision-contents dir file revision))
-		 (repo/commit-count dir file revision)))
-
-(defn scatter-plot
-  [dir revision]
-  (ScatterPlot. revision
-		(map #(scatter-point dir %1 revision) (repo/target-files dir))))
+;; (defn scatter-plot
+;;   [repository revision]
+;;   (ScatterPlot. revision
+;; 		(map #(scatter-point repository %1 revision) (repo/files repository))))
 
 (defn history
   [dir]
-  (map #(scatter-plot dir %) (repo/revisions dir)))
+  (let [repository (cleavage.git-repository.GitRepository. dir)
+	file-and-commits (fn [filename] (list filename (repo/commits repository filename "HEAD")))
+	coordinates (fn [file-glob] (map #(vector
+				     (code/complexity (repo/revision-contents repository (first file-glob) %))
+				     (count (repo/commits repository (first file-glob) %))
+				     (repo/revision-number repository %))
+					 (nth file-glob 1)))]		      
+    (map #(FileHistory. (first %) (coordinates %)) (map file-and-commits (repo/files repository)))))
 
 (defn cleavage [dir]
   (glviewer/start (take 15 (history dir))))
