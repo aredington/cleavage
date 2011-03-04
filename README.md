@@ -17,19 +17,19 @@ Cleavage operates against git repositories. Right now I invoke it from a REPL, s
 
 First you'll need cake
 
-   gem install cake
+    gem install cake
 
 Next, from the root of the Cleavage project, start up a REPL
 
-   cake repl
+    cake repl
 
 Get all the Cleavage goodies in your REPL
 
-   (require 'cleavage.core)
+    (require 'cleavage.core)
 
 Invoke it against some git repository. (The trailing slash is important right now, this is a lame bug.)
 
-   (cleavage.core/cleavage "/Users/alex/mongo-java-driver/")
+    (cleavage.core/cleavage "/Users/alex/mongo-java-driver/")
 
 I pick on mongo-java-driver because it was the first java project I found on github when I did a search.
 
