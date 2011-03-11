@@ -6,17 +6,6 @@
 
 (defrecord FileHistory [^String filename points])
 
-;; (defn scatter-point
-;;   [repository file revision]
-;;   (ScatterPoint. (repo/relative-path repository file)
-;; 		 (code/complexity (repo/revision-contents repository file revision))
-;; 		 (repo/commit-count repository file revision)))
-
-;; (defn scatter-plot
-;;   [repository revision]
-;;   (ScatterPlot. revision
-;; 		(map #(scatter-point repository %1 revision) (repo/files repository))))
-
 (defn history
   [dir]
   (let [repository (cleavage.git-repository.GitRepository. dir)
