@@ -12,37 +12,18 @@
 
 (def cos-quarter-pi (Math/cos (/ Math/PI 4)))
 
-(def oct [[0.0 1.0 0.0]
-	  [cos-quarter-pi cos-quarter-pi 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [cos-quarter-pi cos-quarter-pi 0.0]
-	  [1.0 0.0 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [1.0 0.0 0.0]
-	  [cos-quarter-pi (- cos-quarter-pi) 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [cos-quarter-pi (- cos-quarter-pi) 0.0]
-	  [0.0 -1.0 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [0.0 -1.0 0.0]
-	  [(- cos-quarter-pi) (- cos-quarter-pi) 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [(- cos-quarter-pi) (- cos-quarter-pi) 0.0]
-	  [-1.0 0.0 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [-1.0 0.0 0.0]
-	  [(- cos-quarter-pi) cos-quarter-pi 0.0]
-	  [0.0 0.0 0.0]
-	  
-	  [(- cos-quarter-pi) cos-quarter-pi 0.0]
-	  [0.0 1.0 0.0]
-	  [0.0 0.0 0.0]])
+(defn oct-points
+  [[x y z]]
+  (let [z (/ z 10.0)
+	y (* y 10.0)]
+    (vector [x (+ 1.0 y) z]
+	    [(+ cos-quarter-pi x) (+ cos-quarter-pi y) z]
+	    [(+ 1.0 x) y z]
+	    [(+ cos-quarter-pi x) (- y cos-quarter-pi) z]
+	    [x (+ -1.0 y) z]
+	    [(- x cos-quarter-pi) (- y cos-quarter-pi) z]
+	    [(+ -1.0 x) y z]
+	    [(- x cos-quarter-pi) (+ y cos-quarter-pi) z])))
 
 ;; -----------------------------------------------------------------------------
 ;; Import
@@ -82,21 +63,47 @@
       :right (update-in state [:yrot] #(+ % 1))
       state))
 
-(defn draw-octagon
-  "draw an octagon"
-  [x y z]
-  (push-matrix 
-   (translate x y z)
-   (scale 0.5 0.5 1.0)
-   (draw-triangles (dorun (map #(apply vertex %) oct)))))
+(defn points
+  "generate all points for a pair of coordinates"
+  [[first-point second-point]]
+  (reduce concat (list (oct-points first-point) (reverse (oct-points second-point)))))
 
-(defn display [[delta time] state]
-  (translate -4.0 -4.0 -20.0)
-  (rotate (:xrot state) 1.0 0.0 0.0)
-  (rotate (:yrot state) 0.0 0.0 1.0)
-  (doseq [point (:points state)]
-    (apply draw-octagon point))
-  (app/repaint!))
+(defn triangle-strips
+  "generate the triangle strips for a pair of points"
+  [point-pair]
+  (let [[v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15] (points point-pair)]
+    [v0  v1  v15
+     v15 v14 v1
+     v1  v2  v14
+     v14 v13 v2
+     v2  v3  v13
+     v13 v12 v3
+     v3  v4  v12
+     v12 v11 v4
+     v4  v5  v11
+     v11 v10 v5
+     v5  v6  v10
+     v10 v9  v6
+     v6  v7  v9
+     v9  v8  v7
+     v7  v0  v8
+     v8  v15 v0
+     ]))
+
+(defn draw-tendril
+  "draw a tendril for one file's complete history"
+  [file]
+  (push-matrix 
+   (doseq [point-pair (partition 2 1 (:points file))]
+     (draw-triangles (dorun (map #(apply vertex %) (triangle-strips point-pair)))))))
+
+  (defn display [[delta time] state]
+    (translate -4.0 -4.0 -20.0)
+    (rotate (:xrot state) 1.0 0.0 0.0)
+    (rotate (:yrot state) 0.0 0.0 1.0)
+    (doseq [file (:files state)]
+      (draw-tendril file))
+    (app/repaint!))
 
 (defn display-proxy [& args]
   (apply display args))
@@ -106,15 +113,5 @@
               :display display
               :init init})
 
-(defn point-set [scatter-point-set height]
-  (map #(vector (:complexity %) (:commits %) height) scatter-point-set))
-
-(defn glpoints [revision]
-  (let [scatter-point-set (map #(:points %) revision)]
-    (map #(point-set %1 %2) scatter-point-set (map #(/ % 10.0) (range)))))
-
-(defn glmassage [history]
-  (reduce concat (glpoints (reverse history))))
-
 (defn start [history]
-  (app/start options {:points (glmassage history)}))
+  (app/start options {:files history}))

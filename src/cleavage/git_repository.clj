@@ -38,16 +38,16 @@ the first revision should return the most recent revision"
   (zipmap (reverse revisions) (range)))
 (memoize revision-sequences)
 
+(defn git-relative-path
+  [dir file]
+  (str/replace (str/replace (.getPath file) dir "") #"^\/" ""))
+
 (defn git-files
   "returns lazyseq of all the files in targetdir"
   [dir]
   (map #(git-relative-path dir %) (filter
    #(re-find #"\.java$" (.getName %1))
    (file-seq (target-dir dir)))))
-
-(defn git-relative-path
-  [dir file]
-  (str/replace (str/replace (.getPath file) dir "") #"^\/" ""))
 
 (defn git-commits
   "all the commits which touched specific file"

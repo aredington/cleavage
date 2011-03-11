@@ -29,4 +29,4 @@
     (map #(FileHistory. (first %) (coordinates %)) (map file-and-commits (repo/files repository)))))
 
 (defn cleavage [dir]
-  (glviewer/start (take 15 (history dir))))
+  (glviewer/start (history dir)))
