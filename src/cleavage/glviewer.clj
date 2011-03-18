@@ -99,15 +99,18 @@
 (defn cap
   "generate a triangle strip to cap a given point"
   [point normalization-vector]
-  (let [[v0 v1 v2 v3 v4 v5 v6 v7] (oct-points point normalization-vector)]
-    [point v0 v1
-     point v1 v2
-     point v2 v3
-     point v3 v4
-     point v4 v5
-     point v5 v6
-     point v6 v7
-     point v7 v0]))
+  (let [[v0 v1 v2 v3 v4 v5 v6 v7] (oct-points point normalization-vector)
+	normalized-point [(* (point 1) (normalization-vector 1))
+			  (* (point 0) (normalization-vector 0))
+			  (* (point 2) (normalization-vector 2))]]
+    [normalized-point v0 v1
+     normalized-point v1 v2
+     normalized-point v2 v3
+     normalized-point v3 v4
+     normalized-point v4 v5
+     normalized-point v5 v6
+     normalized-point v6 v7
+     normalized-point v7 v0]))
 
 (defn nth-percentile
   "returns the item from coll within which n percent of
@@ -134,14 +137,11 @@ to fit them into a 10x10x10 cube"
 	start-cap (cap first-point normalization-vector)
 	end-cap (cap last-point normalization-vector)
 	point-pairs (partition 2 1 points)
-	all-triangle-strips (map #(triangle-strips % normalization-vector) point-pairs)]
-    (push-matrix 
-     (draw-triangles (map #(apply vertex %) (cap first-point normalization-vector)))
-     (draw-triangles (map #(apply vertex %) (cap last-point normalization-vector)))
-     (doseq [point-pair (partition 2 1 points)]
-       (draw-triangles
-	(dorun (map #(apply vertex %)
-		    (triangle-strips point-pair normalization-vector))))))))
+	tube-points (reduce concat (map #(triangle-strips % normalization-vector) point-pairs))]
+    (push-matrix
+     (push-matrix (draw-triangles (dorun (map #(apply vertex %) start-cap))))
+     (push-matrix (draw-triangles (dorun (map #(apply vertex %) end-cap))))
+     (push-matrix (draw-triangles (dorun (map #(apply vertex %) tube-points)))))))
 
 (defn draw-axes []
   (color 0 0 1)
