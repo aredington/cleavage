@@ -22,14 +22,14 @@
   (let [x (* x x-scale)
 	y (* y y-scale)
 	z (* z z-scale)]
-    (vector [x (+ 1.0 y) z]
-	    [(+ cos-quarter-pi x) (+ cos-quarter-pi y) z]
-	    [(+ 1.0 x) y z]
-	    [(+ cos-quarter-pi x) (- y cos-quarter-pi) z]
-	    [x (+ -1.0 y) z]
-	    [(- x cos-quarter-pi) (- y cos-quarter-pi) z]
-	    [(+ -1.0 x) y z]
-	    [(- x cos-quarter-pi) (+ y cos-quarter-pi) z])))
+    (vector [y (+ 1.0 x) z]
+	    [(+ cos-quarter-pi y) (+ cos-quarter-pi x) z]
+	    [(+ 1.0 y) x z]
+	    [(+ cos-quarter-pi y) (- x cos-quarter-pi) z]
+	    [y (+ -1.0 x) z]
+	    [(- y cos-quarter-pi) (- x cos-quarter-pi) z]
+	    [(+ -1.0 y) x z]
+	    [(- y cos-quarter-pi) (+ x cos-quarter-pi) z])))
 
 ;; -----------------------------------------------------------------------------
 ;; Import
@@ -96,6 +96,19 @@
      v7  v0  v8
      v8  v15 v0]))
 
+(defn cap
+  "generate a triangle strip to cap a given point"
+  [point normalization-vector]
+  (let [[v0 v1 v2 v3 v4 v5 v6 v7] (oct-points point normalization-vector)]
+    [point v0 v1
+     point v1 v2
+     point v2 v3
+     point v3 v4
+     point v4 v5
+     point v5 v6
+     point v6 v7
+     point v7 v0]))
+
 (defn nth-percentile
   "returns the item from coll within which n percent of
 all other items fall below"
@@ -115,12 +128,28 @@ to fit them into a 10x10x10 cube"
 (defn draw-tendril
   "draw a tendril for one file's complete history"
   [file normalization-vector]
-  (push-matrix 
-   (doseq [point-pair (partition 2 1 (:points file))]
-     (draw-triangles (dorun (map #(apply vertex %)
-				 (triangle-strips point-pair normalization-vector)))))))
+  (let [points (:points file)
+	first-point (first points)
+	last-point (last points)
+	start-cap (cap first-point normalization-vector)
+	end-cap (cap last-point normalization-vector)
+	point-pairs (partition 2 1 points)
+	all-triangle-strips (map #(triangle-strips % normalization-vector) point-pairs)]
+    (push-matrix 
+     (draw-triangles (map #(apply vertex %) (cap first-point normalization-vector)))
+     (draw-triangles (map #(apply vertex %) (cap last-point normalization-vector)))
+     (doseq [point-pair (partition 2 1 points)]
+       (draw-triangles
+	(dorun (map #(apply vertex %)
+		    (triangle-strips point-pair normalization-vector))))))))
 
-(defn draw-axes [] nil)
+(defn draw-axes []
+  (color 0 0 1)
+  (draw-lines (vertex 0 0 0) (vertex 0 20 0))
+  (color 0 1 0)
+  (draw-lines (vertex 0 0 0) (vertex 20 0 0))
+  (color 1 0 0)
+  (draw-lines (vertex 0 0 0) (vertex 0 0 20)))
 
 (defn percent-between
   [a b c]
@@ -138,8 +167,8 @@ to the origin after normalization is applied. 45deg = red,
 	unit-point (map #(/ % distance) normalized-point)
 	angle (rtod (math/acos (nth unit-point 0)))]
     (if (> angle 45)
-      [(percent-between 90 angle 45) 0.0 (percent-between 45 angle 90)]
-      [(percent-between 0 angle 45) (percent-between 45 angle 0) 0.0])))
+      [(percent-between 90 angle 45) (percent-between 45 angle 90) 0.0]
+      [(percent-between 0 angle 45) 0.0 (percent-between 45 angle 0)])))
 
 (defn display [[delta time] state]
   (let [normalization-vector (normalization-vector (:files state))]
