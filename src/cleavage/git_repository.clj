@@ -40,23 +40,24 @@ the first revision should return the most recent revision"
 
 (defn- git-relative-path
   [dir file]
-  (str/replace (str/replace (.getPath file) dir "") #"^\/" ""))
+  (-> file .getPath (str/replace dir "") (str/replace #"^\/" "")))
 
 (defn- git-files
   "returns lazyseq of all the files in targetdir"
   [dir]
-  (map #(git-relative-path dir %) (filter
-   #(re-find #"\.java$" (.getName %1))
-   (file-seq (target-dir dir)))))
+  (map #(git-relative-path dir %)
+       (filter
+        #(->> % .getName (re-find #"\.java$"))
+        (-> dir target-dir file-seq))))
 
 (defn- git-commits
   "all the commits which touched specific file"
-  [repository file revsision]
+  [repository file revision]
   (let [rw (RevWalk. repository)
 	revision-sequences (revision-sequences (git-revisions repository))]
-    (.markStart rw (.parseCommit rw (repository-resolve repository revsision)))
-    (.setTreeFilter rw (AndTreeFilter/create (PathFilter/create file) TreeFilter/ANY_DIFF))
-    (map #(.name %) (seq rw))))
+    (->> revision (repository-resolve repository) (.parseCommit rw) (.markStart rw))
+    (->> file PathFilter/create (AndTreeFilter/create TreeFilter/ANY_DIFF) (.setTreeFilter rw))
+    (map #(.name %) rw)))
 
 (defn- git-revision-contents
   [repository file revision]

@@ -21,11 +21,12 @@
 
 (defn- coordinates
   [repository file-glob]
-  (map #(vector
-         (code/complexity (repo/revision-contents repository (first file-glob) %))
-         (count (repo/commits repository (first file-glob) %))
-         (repo/revision-number repository %))
-       (nth file-glob 1)))
+  (map #(let [filename (first file-glob)]
+          (vector
+           (->> % (repo/revision-contents repository filename) code/complexity)
+           (->> % (repo/commits repository filename) count)
+           (repo/revision-number repository %)))
+       (last file-glob)))
 
 (defn- history
   [dir]

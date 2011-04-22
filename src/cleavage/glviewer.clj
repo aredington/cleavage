@@ -2,7 +2,6 @@
   (:use [penumbra opengl]
         [penumbra.opengl.core :only [gl-import]])
   (:require [penumbra.app :as app]
-	    [cleavage.fakescatter :as fake]
 	    [clojure.contrib.generic.math-functions :as math]))
 
 ;; -----------------------------------------------------------------------------

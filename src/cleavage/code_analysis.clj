@@ -2,7 +2,7 @@
 
 (defn cyclomatches
   [contents]
-  (count (re-seq #"for|if|while|case|catch|&&|\\\|\\\||\\\?" contents)))
+  (->> contents (re-seq #"for|if|while|case|catch|&&|\\\|\\\||\\\?") count))
 
 (defn cyclomatic-complexity
   "returns the cyclomatic complexity for one file"
