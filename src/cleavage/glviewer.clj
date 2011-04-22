@@ -142,14 +142,6 @@ to fit them into a 10x10x10 cube"
      (push-matrix (draw-triangles (dorun (map #(apply vertex %) end-cap))))
      (push-matrix (draw-triangles (dorun (map #(apply vertex %) tube-points)))))))
 
-(defn draw-axes []
-  (color 0 0 1)
-  (draw-lines (vertex 0 0 0) (vertex 0 20 0))
-  (color 0 1 0)
-  (draw-lines (vertex 0 0 0) (vertex 20 0 0))
-  (color 1 0 0)
-  (draw-lines (vertex 0 0 0) (vertex 0 0 20)))
-
 (defn percent-between
   [a b c]
   (/ (math/abs (- b a)) (math/abs (- c a))))
@@ -169,15 +161,26 @@ to the origin after normalization is applied. 45deg = red,
       [(percent-between 90 angle 45) (percent-between 45 angle 90) 0.0]
       [(percent-between 0 angle 45) 0.0 (percent-between 45 angle 0)])))
 
+(defn draw-tendrils [state normalization-vector]
+  (doseq [file (:files state)]
+    (apply color (color-for (first (:points file)) normalization-vector))
+    (draw-tendril file normalization-vector)))
+
+(defn draw-axes []
+  (color 0 0 1)
+  (draw-lines (vertex 0 0 0) (vertex 0 20 0))
+  (color 0 1 0)
+  (draw-lines (vertex 0 0 0) (vertex 20 0 0))
+  (color 1 0 0)
+  (draw-lines (vertex 0 0 0) (vertex 0 0 20)))
+
 (defn display [[delta time] state]
   (let [normalization-vector (normalization-vector (:files state))]
     (translate -4.0 -4.0 -20.0)
     (rotate (:xrot state) 1.0 0.0 0.0)
     (rotate (:yrot state) 0.0 0.0 1.0)
     (draw-axes)
-    (doseq [file (:files state)]
-      (apply color (color-for (first (:points file)) normalization-vector))
-      (draw-tendril file normalization-vector))
+    (draw-tendrils state normalization-vector)
     (app/repaint!)))
     
 (defn display-proxy [& args]
