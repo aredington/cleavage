@@ -66,11 +66,11 @@ the first revision should return the most recent revision"
       ""
       (slurp (.. repository (open versioned-object-id) openStream)))))
 
-(deftype GitRepository [dirpath]
+(deftype GitRepository [dirpath repository]
   repo/ScmRepository
-  (revisions [repo] (git-revisions (repository dirpath)))
+  (revisions [repo] (git-revisions repository)))
   (files [repo] (git-files dirpath))
   (relative-path [repo repo-file] (git-relative-path dirpath repo-file))
-  (revision-number [repo revision] (get (revision-sequences (git-revisions (repository dirpath))) revision))
-  (commits [repo repo-file revision] (git-commits (repository dirpath) repo-file revision))
-  (revision-contents [repo repo-file revision] (git-revision-contents (repository dirpath) repo-file revision)))
+  (revision-number [repo revision] (get (revision-sequences (git-revisions repository)) revision))
+  (commits [repo repo-file revision] (git-commits repository repo-file revision))
+  (revision-contents [repo repo-file revision] (git-revision-contents repository repo-file revision)))
