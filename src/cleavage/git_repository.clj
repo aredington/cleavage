@@ -68,9 +68,12 @@ the first revision should return the most recent revision"
 
 (deftype GitRepository [dirpath repository]
   repo/ScmRepository
-  (revisions [repo] (git-revisions repository)))
+  (revisions [repo] (git-revisions repository))
   (files [repo] (git-files dirpath))
   (relative-path [repo repo-file] (git-relative-path dirpath repo-file))
   (revision-number [repo revision] (get (revision-sequences (git-revisions repository)) revision))
   (commits [repo repo-file revision] (git-commits repository repo-file revision))
   (revision-contents [repo repo-file revision] (git-revision-contents repository repo-file revision)))
+
+(defn git-repository [dirpath]
+  (GitRepository. dirpath (repository dirpath)))

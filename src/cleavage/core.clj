@@ -29,7 +29,7 @@
 
 (defn- history
   [dir]
-  (let [repository (cleavage.git-repository.GitRepository. dir)]		      
+  (let [repository (git/git-repository dir)]		      
     (map #(FileHistory.
            (first %)
            (normalize-coordinates (coordinates repository %) (-> repository repo/revisions count)))
