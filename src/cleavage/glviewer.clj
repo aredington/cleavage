@@ -60,6 +60,11 @@
   (load-identity)
   state)
 
+(defn mouse-drag [[dx dy] [x y] button state]
+  (assoc state
+    :xrot (+ (:xrot state) dy)
+    :yrot (- (:yrot state) dx)))
+
 (defn key-press [key state]
   (condp = key
       :f1 state
@@ -188,6 +193,7 @@ to the origin after normalization is applied. 45deg = red,
 
 (def options {:reshape reshape
               :key-press key-press
+              :mouse-drag mouse-drag
               :display display
               :init init})
 
