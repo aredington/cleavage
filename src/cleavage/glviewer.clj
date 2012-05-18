@@ -68,10 +68,10 @@
 (defn key-press [key state]
   (condp = key
       :f1 state
-      :up (update-in state [:xrot] #(+ % 1))
-      :down (update-in state [:xrot] #(- % 1))
-      :left (update-in state [:yrot] #(- % 1))
-      :right (update-in state [:yrot] #(+ % 1))
+      :up (update-in state [:xrot] inc)
+      :down (update-in state [:xrot] dec)
+      :left (update-in state [:yrot] dec)
+      :right (update-in state [:yrot] inc)
       state))
 
 (defn points
@@ -128,7 +128,7 @@ all other items fall below"
   "returns a vector of scaling multiples to apply to all coordinates
 to fit them into a 10x10x10 cube"
   [history]
-  (let [all-points (reduce concat (map #(:points %) history))
+  (let [all-points (reduce concat (map :points history))
 	nth-max (fn [n] (nth-percentile 95 (map #(nth % n) all-points)))]
     (vec (map #(/ 10.0 %) (map nth-max (range 3))))))
 

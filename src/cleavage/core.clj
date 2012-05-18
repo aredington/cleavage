@@ -8,7 +8,7 @@
 
 (defn- normalize-coordinates
   [coordinates revision-count]
-  (let [with-root (if (= (-> coordinates last last) 0)
+  (let [with-root (if (zero? (-> coordinates last last))
                     coordinates
                     (concat coordinates '([0 0 0])))]
     (if (= (-> with-root first last) revision-count)
